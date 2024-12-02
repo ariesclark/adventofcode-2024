@@ -1,54 +1,33 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 
-const words = [
-	"one",
-	"two",
-	"three",
-	"four",
-	"five",
-	"six",
-	"seven",
-	"eight",
-	"nine"
-];
+const input = (await readFile(path.resolve(__dirname, "input.txt"), "utf8"))
+	.split("\n")
+	.map((line) => line.split("   "));
 
-const WordNumberRegex = new RegExp(words.join("|"), "gi");
+const left = input.map(([a]) => Number.parseInt(a)).sort();
+const right = input.map(([, b]) => Number.parseInt(b)).sort();
 
-void (async () => {
-	const input = await readFile(path.resolve(__dirname, "input.txt"), "utf8");
+console.log(
+	"part 1",
+	left.reduce((accumulator, a, index) => {
+		const b = right[index];
+		return accumulator + Math.abs(a - b);
+	}, 0)
+);
 
-	const value = input
-		.split("\n")
-		.filter(Boolean)
-		.map((value) => {
-			value = value
-				.replaceAll(
-					WordNumberRegex,
-					(match) =>
-						`${(
-							words.indexOf(match.toLowerCase()) + 1
-						).toString()}${match.slice(-1)}`
-				)
-				.replaceAll(
-					WordNumberRegex,
-					(match) =>
-						`${(
-							words.indexOf(match.toLowerCase()) + 1
-						).toString()}${match.slice(-1)}`
-				)
-				// Remove all non-numeric characters.
-				.replaceAll(/\D/g, "");
+const occurences = right.reduce(
+	(accumulator, b) => {
+		accumulator[b] = (accumulator[b] || 0) + 1;
+		return accumulator;
+	},
+	{} as Record<string, number>
+);
 
-			const numbers = [...value].map(Number);
-			const result = Number.parseInt(`${numbers.at(0)!}${numbers.at(-1)!}`);
-
-			return result;
-		});
-
-	const sum = value.reduce(
-		(accumulator, currentValue) => accumulator + currentValue
-	);
-
-	console.log(sum);
-})();
+console.log(
+	"part 2",
+	left.reduce((accumulator, a, index) => {
+		const o = occurences[a] || 0;
+		return accumulator + a * o;
+	}, 0)
+);
